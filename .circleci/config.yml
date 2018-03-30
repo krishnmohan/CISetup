@@ -8,23 +8,28 @@ jobs:
   - image: circleci/openjdk:8-jdk-browsers
   
 
+  environment:
+      # Customize the JVM maximum heap limit
+         MAVEN_OPTS: -Xmx3200m
+      
+  
     steps:
       - checkout
 
+      # Download and cache dependencies
       - restore_cache:
-          key: circleci-demo-java-spring-{{ checksum "pom.xml" }}
-      
-      - run: mvn dependency:go-offline
-      
+          keys:
+          - v1-dependencies-{{ checksum "pom.xml" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - run: mvn dependency:go-offline 
+   # - run: cd CoreTest && mvn dependency:go-offline
+
       - save_cache:
           paths:
             - ~/.m2
-          key: circleci-demo-java-spring-{{ checksum "pom.xml" }}
-      
-      - run: mvn package
-      
-      - store_test_results:
-          path: target/surefire-reports
-      
-      - store_artifacts:
-path: target/demo-java-spring-0.0.1-SNAPSHOT.jar
+          key: v1-dependencies-{{ checksum "pom.xml" }}
+        
+      # run tests!
+- run: mvn integration-test
